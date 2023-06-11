@@ -150,6 +150,7 @@ box eval(box x, box e)
 }
 
 // void print(box x);
+// #include <stdio.h>
 // box eval(box x, box e)
 // {
 // 	box y = step(x, e);

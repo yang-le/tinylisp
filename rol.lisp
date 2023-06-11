@@ -50,7 +50,7 @@
                   a))))
     ((eq (caar e) 'label)
      (eval. (cons (caddar e) (cdr e))
-            (cons (list (cadar e) (car e)) a)))
+            (cons (list (cadar e) (caddar e)) a)))
     ((eq (caar e) 'lambda)
      (eval. (caddar e)
             (append. (pair. (cadar e) (evlis. (cdr  e) a))
