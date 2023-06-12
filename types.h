@@ -12,13 +12,13 @@ typedef struct
 {
 	int64_t ptr : 48;
 	uint64_t type : 16;
+/* we have 3 bits for types, that is the 48 - 50 bit */
 #define TSYM 0x7FF8
 #define TPRIM 0x7FF9
 #define TCONS 0x7FFA
 #define TCLOS 0x7FFB
 #define TMACR 0x7FFC
-#define TNIL 0x7FFD
-#define TNUM 0x7FFE
+#define TNUM 0x7FFD
 } box;
 
 // typedef struct {
@@ -38,6 +38,7 @@ typedef struct
 #define get_str(a) ((char *)(intptr_t)a.ptr)
 #define car(a) ((a.type == TCONS || a.type == TCLOS || a.type == TMACR) ? (*(box *)(intptr_t)a.ptr) : ERR)
 #define cdr(a) ((a.type == TCONS || a.type == TCLOS || a.type == TMACR) ? (*((box *)(intptr_t)a.ptr + 1)) : ERR)
+#define nil(a) equ(a, NIL)
 
 int equ(box a, box b);
 box cons(box a, box b);

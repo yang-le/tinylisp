@@ -7,29 +7,29 @@
 (defun caddr (x) (car (cdr(cdr x))))
 (defun caddar (x) (car(cdr(cdr(car x)))))
 
-(defun null. (x) (eq x '()))
+(defun null. (x) (eq x #nil))
 
 (defun and. (x y)
-  (cond (x (cond (y 't) ('t '())))
-        ('t '())))
+  (cond (x (cond (y #t) (#t #f)))
+        (#t #f)))
 
 (defun not. (x)
-  (cond (x '())
-        ('t 't)))
+  (cond (x #f)
+        (#t #t)))
 
 (defun append. (x y)
    (cond ((null. x) y)
-         ('t (cons (car x) (append. (cdr x) y)))))
+         (#t (cons (car x) (append. (cdr x) y)))))
 
 (defun pair. (x y)
-  (cond ((and. (null. x) (null. y)) '())
+  (cond ((and. (null. x) (null. y)) #nil)
         ((and. (not. (atom x)) (not. (atom y)))
          (cons (list (car x) (car y))
                (pair. (cdr x) (cdr y))))))
 
 (defun assoc. (x y)
   (cond ((eq (caar y) x) (cadar y))
-        ('t (assoc. x (cdr y)))))
+        (#t (assoc. x (cdr y)))))
 
 (defun eval. (e a)
   (cond
@@ -45,7 +45,7 @@
        ((eq (car e) 'cons)  (cons   (eval. (cadr e) a)
                                     (eval. (caddr e) a)))
        ((eq (car e) 'cond)  (evcon. (cdr e) a))
-       ('t (eval. (cons (assoc. (car e) a)
+       (#t (eval. (cons (assoc. (car e) a)
                         (cdr e))
                   a))))
     ((eq (caar e) 'label)
@@ -59,9 +59,9 @@
 (defun evcon. (c a)
   (cond ((eval. (caar c) a)
          (eval. (cadar c) a))
-        ('t (evcon. (cdr c) a))))
+        (#t (evcon. (cdr c) a))))
 
 (defun evlis. (m a)
-  (cond ((null. m) '())
-        ('t (cons (eval.  (car m) a)
+  (cond ((null. m) #nil)
+        (#t (cons (eval.  (car m) a)
                   (evlis. (cdr m) a)))))

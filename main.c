@@ -12,10 +12,17 @@ void look()
 {
 	int c = getchar();
 	see = c;
-	if (c == EOF)
+	if (c == EOF) {
+		putchar('\n');
 		exit(0);
+	}
 }
-int seeing(char c) { return c == ' ' ? see > 0 && see <= c : see == c; }
+
+int seeing(char c)
+{
+	return c == ' ' ? see > 0 && see <= c : see == c;
+}
+
 char get()
 {
 	char c = see;
@@ -28,12 +35,17 @@ char scan()
 	int i = 0;
 	while (seeing(' '))
 		look();
+	if (seeing(';')) {
+		while (!seeing('\n'))
+			look();
+		look();
+	}
 	if (seeing('(') || seeing(')') || seeing('\''))
 		buf[i++] = get();
 	else
 		do
 			buf[i++] = get();
-		while (i < sizeof(buf) - 1 && !seeing('(') && !seeing(')') && !seeing(' '));
+		while (i < sizeof(buf) - 1 && !seeing('(') && !seeing(')') && !seeing(' ') && !seeing(';'));
 	buf[i] = 0;
 	return *buf;
 }
@@ -96,7 +108,7 @@ void printlist(box t)
 	{
 		print(car(t));
 		t = cdr(t);
-		if (t.type == TNIL)
+		if (nil(t))
 			break;
 		if (t.type != TCONS)
 		{
@@ -110,9 +122,7 @@ void printlist(box t)
 
 void print(box x)
 {
-	if (x.type == TNIL)
-		printf("#f");
-	else if (x.type == TSYM)
+	if (x.type == TSYM)
 		printf("%s", get_str(x));
 	else if (x.type == TPRIM)
 		printf("<%d>", get_int(x));

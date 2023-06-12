@@ -7,6 +7,7 @@ box ERR;
 box env;
 
 static box T;
+static box F;
 
 box assoc(box v, box e)
 {
@@ -24,13 +25,13 @@ box evlis(box t, box e)
 box f_atom(box t, box e)
 {
 	t = evlis(t, e);
-	return (car(t).type != TCONS && car(t).type != TCLOS) ? T : NIL;
+	return (car(t).type != TCONS && car(t).type != TCLOS && car(t).type != TPRIM && car(t).type != TMACR) ? T : F;
 }
 
 box f_eq(box t, box e)
 {
 	t = evlis(t, e);
-	return equ(car(t), car(cdr(t))) ? T : NIL;
+	return equ(car(t), car(cdr(t))) ? T : F;
 }
 
 box f_car(box t, box e)
@@ -58,7 +59,7 @@ box f_quote(box t, box _)
 
 box f_cond(box t, box e)
 {
-	while (t.type != TNIL && eval(car(car(t)), e).type == TNIL)
+	while (!nil(t) && equ(eval(car(car(t)), e), F))
 		t = cdr(t);
 	return eval(car(cdr(car(t))), e);
 }
@@ -98,21 +99,29 @@ struct {
 	PRIM(cond),
 	PRIM(lambda),
 	PRIM(label),
+	PRIM(macro),
+#ifdef EXTEND
 	PRIM(env),
-	PRIM(macro)
+#endif
 #undef PRIM
 };
 
 void init_primitive()
 {
 	static int64_t t = (int64_t)"#t";
-	static int64_t nil = (int64_t)"";
+	static int64_t f = (int64_t)"#f";
+	static int64_t nil = (int64_t)"#nil";
 	static int64_t err = (int64_t)"#err";
 	T = tbox(t, TSYM);
-	NIL = tbox(nil, TNIL);
+	F = tbox(f, TSYM);
+	NIL = tbox(nil, TSYM);
 	ERR = tbox(err, TSYM);
 
 	env = pair(T, T, NIL);
+	env = pair(F, F, env);
+	env = pair(NIL, NIL, env);
+	env = pair(ERR, ERR, env);
+
 	for (unsigned i = 0; i < sizeof(prims) / sizeof(prims[0]); ++i) {
 		int64_t name = (int64_t)prims[i].name;
 		env = pair(tbox(name, TSYM), tbox(i, TPRIM), env);
@@ -121,13 +130,13 @@ void init_primitive()
 
 box bind(box v, box t, box e)
 {
-	return v.type == TNIL ? e :
+	return nil(v) ? e :
 		v.type == TCONS ? bind(cdr(v), cdr(t), pair(car(v), car(t), e)) : pair(v, t, e);
 }
 
 box reduce(box f, box t, box e)
 {
-	return eval(cdr(car(f)), bind(car(car(f)), evlis(t, e), cdr(f).type == TNIL ? env : cdr(f)));
+	return eval(cdr(car(f)), bind(car(car(f)), evlis(t, e), nil(cdr(f)) ? env : cdr(f)));
 }
 
 box expand(box f, box t, box e)
@@ -143,17 +152,23 @@ box apply(box f, box t, box e)
 		f.type == TMACR ? expand(f, t, e) : ERR;
 }
 
+#ifdef DEBUG
+box step(box x, box e)
+#else
 box eval(box x, box e)
+#endif
 {
 	return x.type == TSYM ? assoc(x, e) :
 		x.type == TCONS ? apply(eval(car(x), e), cdr(x), e) : x;
 }
 
-// void print(box x);
-// #include <stdio.h>
-// box eval(box x, box e)
-// {
-// 	box y = step(x, e);
-// 	print(x); printf(" => "); print(y); putchar('\n');
-// 	return y;
-// }
+#ifdef DEBUG
+void print(box x);
+#include <stdio.h>
+box eval(box x, box e)
+{
+	box y = step(x, e);
+	print(x); printf(" => "); print(y); putchar('\n');
+	return y;
+}
+#endif
